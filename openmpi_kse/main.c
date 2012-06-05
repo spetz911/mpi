@@ -339,6 +339,7 @@ int main(int argc, char *argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Get_processor_name(processor_name, &namelen);
 
+	
 	gl_num_procs      = num_procs;
 	gl_rank           = rank;
 	gl_processor_name = processor_name;
@@ -347,6 +348,7 @@ int main(int argc, char *argv[])
 
 	//set steps partition
 
+	
 	set_step_partition(partx, party, &bx, &by, nx, ny, rank);
 
 	if (rank == 0) {
@@ -377,6 +379,8 @@ int main(int argc, char *argv[])
  	sprintf(str, "nt = %d", nt);
 	prmsg(str);
  	
+ 	// FIXME
+
 	//Huhonio
 	shock_condition(st, sh, gamma, partx, party);
 	//***************************************
