@@ -2,21 +2,9 @@
 
 #include <algorithm>
 
-void init_state(state *st, double hx, double hy, double ht)
-{
-	st->hx = hx;
-	st->hy = hy;
-	st->ht = ht;
-	
-	for (int i = 0; i < st->bx + 2; ++i)
-		for (int j = 0; j < st->by + 2; ++j) {
-			st[i][j]->init();
-		}
-}
-
 
 void
-evalVar(state *st, prev_layer *pl, int i, int j)
+evalVar(Field &st, prev_layer *pl, int i, int j)
 {
 	// eval Q
 	
@@ -37,23 +25,23 @@ evalVar(state *st, prev_layer *pl, int i, int j)
 	double E[] = { 0, 0, 0, 0 };
 	
 	
-	state old = pl->old;
-	state old_prev = pl->old_prev;
-	state *prev_row = pl->prev_row;
+	State old = pl->old;
+	State prev_old = pl->prev_old;
+	std::vector<State> prev_row = pl->prev_row;
 	
 	// FIXME p == p??
-	state cc	= update_state(old); // center
+	State cc	= State::update(old); // center
 	// top FIXME error p[i][j+1] vs u[i+1][j]
-	state top	= update_state(st[i+1][j]);
-	state bottom	= update_state(prev_row[j-1]);
-	state right	= update_state(st[i][j+1]);
-	state left	= update_state(prev_old);
+	State top	= State::update(st[i+1][j]);
+	State bottom	= State::update(prev_row[j-1]);
+	State right	= State::update(st[i][j+1]);
+	State left	= State::update(prev_old);
 
-	state xc	= old; // ex-center
-	state xtop	= st[i+1][j];
-	state xbottom	= prev_row[j-1];
-	state xright	= st[i][j+1];
-	state xleft	= prev_old;
+	State xc	= old; // ex-center
+	State xtop	= st[i+1][j];
+	State xbottom	= prev_row[j-1];
+	State xright	= st[i][j+1];
+	State xleft	= prev_old;
 
 	
 	// value of flow velocity in the central point
@@ -82,8 +70,8 @@ evalVar(state *st, prev_layer *pl, int i, int j)
 	// mech = 0
 	Q[0] = (xtop.u + xc.u)    - P[0];
 	Q[1] = (xc.u + xbottom.u) - P[1];
-	Q[2] = ((xright.v + xc.v) - P[2];
-	Q[3] = ((xc.v + xleft.v)  - P[3];
+	Q[2] = (xright.v + xc.v)  - P[2];
+	Q[3] = (xc.v + xleft.v)   - P[3];
 
 	st[i][j].p = xc.p - 0.5 * ((Q[0] - Q[1]) / hx + (Q[2] - Q[3]) / hy) * ht;
 
@@ -115,20 +103,20 @@ evalVar(state *st, prev_layer *pl, int i, int j)
 }
 
 void
-execute(state *st, prev_layer *pl, double gamma)
+execute(Field &st, prev_layer *pl)
 {
 	// velocity of the shock wave 
 	
 	pl->old = st[1][0];
 
-	for (int k = 1; k < st->by + 1; ++k)
+	for (int k = 1; k < st.by + 1; ++k)
 		pl->prev_row[k-1] = st[0][k];
 	
 	//--------------------------------------------------------------------------------
 	printf("start execute\n");
 	
-	for (int i = 1; i < st->bx + 1; ++i) {
-		for (int j = 1; j < st->by + 1; ++j) {
+	for (int i = 1; i < st.bx + 1; ++i) {
+		for (int j = 1; j < st.by + 1; ++j) {
 			pl->prev_old = pl->old;
 			pl->old = st[i][j];
 

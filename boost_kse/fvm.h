@@ -6,8 +6,8 @@
 #include <math.h>
 #include "kse.h"
 
+extern double gamma_g;
 
-void init_state(state*, double, double, double);
-void execute(state*, prev_layer*, double);
+void execute(State &st, prev_layer *pl);
 
 #endif

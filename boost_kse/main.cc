@@ -6,6 +6,8 @@
 
 #include "kse.h"
 #include "fvm.h"
+#include "field.h"
+#include "shock.h"
 
 std::string	processor_name_g;
 
@@ -32,8 +34,6 @@ double ht = 0.0000001;
 
 double gamma_g = 1.66666666667;
 
-#include "stuff.cc"
-
 
 namespace mpi = boost::mpi;
 
@@ -44,11 +44,6 @@ class KSE {
 
 };
 
-double *result;              //finally result
-bound *b;                    //four bounds
-state *st;                   //values
-prev_layer *pl;              //stored values
-shock *sh;
 
 
 
@@ -59,9 +54,35 @@ log_(const std::string &str)
 		process_id_g, process_num_g, processor_name_g.c_str(), str.c_str());
 }
 
-void
-init_globals()
+
+
+int
+main(int argc, char* argv[])
 {
+	//partition along X and Y axis
+	int partx = 1;
+	int party = 1;
+	
+	double *result;              //finally result
+	
+	//------------------------------------------------------------
+
+
+	mpi::environment env(argc, argv);
+	mpi::communicator world;
+	mpi::timer timer;
+	process_num_g = world.size();
+
+	set_partition(&partx, &party, nx, ny);
+
+	process_id_g = world.rank();
+	processor_name_g = env.processor_name();
+	
+	set_step_partition(partx, party, &bx, &by, nx, ny);
+
+	if (process_id_g == 0)
+		printf("partx = %d party = %d", partx, party);
+	
 	double rho	= 1.0;
 	double p	= 1.0;
 	double u	= 1.0;
@@ -91,51 +112,16 @@ init_globals()
 	ht = hx * hy;
 
 
-	//init structures
-	st = create_state(bx, by);
-	init_state(st, hx, hy, ht);
-	b  = create_bound(bx, by);
-	pl = create_prev_layer(st->by);
-	sh = create_shock(nx, gamma_g, rho, p, u, v, rho_sh, sh_start, mul);
-	
-
-}
-
-
-int
-main(int argc, char* argv[])
-{
-	//partition along X and Y axis
-	int partx = 1;
-	int party = 1;
-	
-	
-
-	int i, j, k, l, stt;          //stat;
-
-	
-	
-
-	//------------------------------------------------------------
-
-
-	mpi::environment env(argc, argv);
-	mpi::communicator world;
-	mpi::timer timer;
-	process_num_g = world.size();
-	set_partition(&partx, &party, nx, ny, process_num_g);
-	process_id_g = world.rank();
-	processor_name_g = env.processor_name();
-	
-	set_step_partition(partx, party, &bx, &by, nx, ny, process_id_g);
-
-	if (process_id_g == 0)
-		printf("partx = %d party = %d", partx, party);
-	
-	init_globals();
-
 	printf("bx = %d by = %d process_id_g = %d", nx, ny, bx, by, process_id_g);
+
+	//init structures
+	Field st(bx, by);
+	st.init(hx, hy, ht);
+	bounds b(bx, by);
 	
+	prev_layer pl(by);
+	Shock sh(nx, gamma_g, rho, p, u, v, rho_sh, sh_start, mul);
+		
 	
 	//------------------------------------------------------------
 	//while ((stat = MPI_Barrier(MPI_COMM_WORLD)) == 0) ;
@@ -148,7 +134,7 @@ main(int argc, char* argv[])
  	printf("nt = %d", nt);
 	
 	//Huhonio
-	shock_condition(st, sh, gamma_g, partx, party);
+	sh.condition(st, gamma_g, partx, party);
 
 	//***************************************
 //	MPI_Barrier(MPI_COMM_WORLD);
@@ -172,14 +158,7 @@ main(int argc, char* argv[])
 	
 	char str[100];
 	
-	sprintf(str, "out/rho_%d",  process_id_g);
-	show_result(bx, by, st->rho,  str, "Rho");
-	sprintf(str, "out/rhoU_%d", process_id_g);
-	show_result(bx, by, st->rhoU, str, "RhoU");
-	sprintf(str, "out/rhoV_%d", process_id_g);
-	show_result(bx, by, st->rhoV, str, "RhoV");
-	sprintf(str, "out/rhoE_%d", process_id_g);
-	show_result(bx, by, st->rhoE, str, "RhoE");
+	st.show_result("out/");
 
 	
 	printf("stage 6");
@@ -187,9 +166,6 @@ main(int argc, char* argv[])
 	world.barrier();
 
 //	exit(0);
-	clear_state(st);
-	clear_bound(b);
-	clear_prev_layer(pl);
 
 	printf("stage 7");
 	//stop mpi

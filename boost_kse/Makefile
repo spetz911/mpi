@@ -1,6 +1,7 @@
 CFLAGS		= -g
-HEADERS		= fvm.h kse.h
-OBJECTS		= fvm.o kse.o
+CXXFLAGS	= -std=gnu++0x
+HEADERS		= fvm.h kse.h shock.h field.h
+OBJECTS		= fvm.o kse.o shock.o field.o
 TARGETS		= kse
 LDFLAGS		= -lboost_mpi -lboost_serialization
 

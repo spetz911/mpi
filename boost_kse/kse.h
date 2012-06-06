@@ -4,92 +4,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <vector>
+
+#include "state.h"
+#include "field.h"
+
 extern double rho_g;
 extern double rhoU_g;
 extern double rhoV_g;
 extern double rhoE_g;
 extern double gamma_g;
 
-// eval shock wave in the node
-const double mul_g = ;
-
-
-struct state {
-	double p;  // rho
-	double u; // rhoU
-	double v; // rhoV
-	double e; // rhoE
-
-public:
-
-	const state
-	operator/ (double x) const
-	{
-	    state tmp = *this;
-	    
-	    tmp.p  /= x;
-	    tmp.u /= x;
-	    tmp.v /= x;
-	    tmp.e /= x;
-	    
-	    return tmp;
-	}
-
-	double
-	calc_eps() const
-	{
-		return (2 * e) / (u * u + v * v);
-	}
-
-	static
-	const state
-	update_state(const state &st, const double &gamma)
-	{
-		state tmp = st;
-		tmp.u /= st.p;
-		tmp.v /= st.p;
-		tmp.e /= st.p;
-		tmp.p = (gamma_g - 1.0) * st.p * tmp.calc_eps();
-		return tmp;
-	}
-
-	double
-	calc_velocity() const
-	{
-		return sqrt(gamma_g * (gamma_g - 1.0) * this->calc_eps()) + sqrt(u * u + v * v);
-	}
-
-	void
-	init()
-	{
-		p = rho_g;
-		v = rhoU_g;
-		u = rhoV_g;
-		e = rhoE_g;
-	}
-};
-
-/*
- * field state of the flat gas dynamic system
- */
-class field {
-	state **data;
-	size_t bx;
-	size_t by;
-	double hx;
-	double hy;
-	double ht;
-	
-public:
-
-	double *&
-	operator[](size_t i)
-	{
-		return data[i];
-	}
-
-};
-
+extern int process_id_g;
 
 /* /ru/
  * Для расчета значения характеристики    2
@@ -105,69 +31,46 @@ public:
  * by - длина строки
  */
 
-typedef struct {
-	state old;
-	state prev_old;
-	state *prev_row;
-	unsigned short int by;
-} prev_layer;
+struct prev_layer {
+	State old;
+	State prev_old;
+	std::vector<State> prev_row;
+	size_t by;
+public:
+	prev_layer(size_t by);
+
+};
 
 
-prev_layer
-
-typedef struct {
-	double *top_bound;
-	double *bottom_bound;
-	double *left_bound;
-	double *right_bound;
-	double *tmpX;
-	double *tmpY;
+struct bounds {
+	std::vector<double> top_bound;
+	std::vector<double> bottom_bound;
+	std::vector<double> left_bound;
+	std::vector<double> right_bound;
+	std::vector<double> tmpX;
+	std::vector<double> tmpY;
 	//number of points for each process
-	unsigned short int bx;
-	unsigned short int by;
-} bound;
+	size_t bx;
+	size_t by;
 
-typedef struct {
-	double shock_start;
-	double mul;
-	int startx;
-	int top_osc;
-	int bottom_osc;
-	double rho0;
-	double rho1;
-	double p0;
-	double p1;
-  double u0;
-  double u1;
-  double eps0;
-  double eps1;
-	double (*tracef)(double);
-} shock;
+public:
+	bounds(size_t bx, size_t by);
+	void
+	init(const std::vector< std::vector<double> > &val);
+	void
+	copy(std::vector< std::vector<double> > &val) const;
 
-field 	   *create_field(int, int);
-void   		clear_field(field*);
+};
 
-prev_layer *create_prev_layer(int);
-void        init_prev_layer(prev_layer*);
-void        clear_prev_layer(prev_layer*);
 
-bound      *create_bound(int, int);
+
 void
-init_bound(bound*, double**);
-void   		copy_bound(bound*, double**);
-void        clear_bound(bound*);
-
-void   		set_partition(int*, int*, int, int, int);
-void   		set_step_partition(int, int, int*, int*, int, int, int);
-double 		top_boundary_condition(int, double, int);
-double 		bottom_boundary_condition(int, double, int);
-double 		left_boundary_condition(int, double, int);
-double 		right_boundary_condition(int, double, int);
-void 		show_result(int bx, int by, double**, const char*, const char*);
+set_partition(int*, int*, int, int);
+void
+set_step_partition(int, int, int*, int*, int, int);
 
 
 double psqrt(double);
 double psin(double);
-double pline(double);
 
 #endif
