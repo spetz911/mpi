@@ -6,16 +6,8 @@
 #include <math.h>
 #include "kse.h"
 
-#define PI 3.14159265
-//#define MAX(a, b) ((a) > (b)) ? (a) : (b)
-
 
 void init_state(state*, double, double, double);
 void execute(state*, prev_layer*, double);
-
-extern double rho_g;
-extern double rhoU_g;
-extern double rhoV_g;
-extern double rhoE_g;
 
 #endif

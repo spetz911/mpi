@@ -27,10 +27,10 @@ public:
 	{
 	    state tmp = *this;
 	    
-	    tmp.rho  /= x;
-	    tmp.rhoU /= x;
-	    tmp.rhoV /= x;
-	    tmp.rhoE /= x;
+	    tmp.p  /= x;
+	    tmp.u /= x;
+	    tmp.v /= x;
+	    tmp.e /= x;
 	    
 	    return tmp;
 	}
@@ -38,7 +38,7 @@ public:
 	double
 	calc_eps() const
 	{
-		return (2 * rhoE) / (rhoU * rhoU + rhoV * rhoV);
+		return (2 * e) / (u * u + v * v);
 	}
 
 	static
@@ -46,26 +46,27 @@ public:
 	update_state(const state &st, const double &gamma)
 	{
 		state tmp = st;
-		tmp.rhoU /= st.rho;
-		tmp.rhoV /= st.rho;
-		tmp.rhoE /= st.rho;
-		tmp.rho = (gamma_g - 1.0) * st.rho * tmp.calc_eps();
+		tmp.u /= st.p;
+		tmp.v /= st.p;
+		tmp.e /= st.p;
+		tmp.p = (gamma_g - 1.0) * st.p * tmp.calc_eps();
 		return tmp;
 	}
 
 	double
 	calc_velocity() const
 	{
-		double tmp;
-		
-		tmp  = sqrt(gamma_g * (gamma_g - 1.0) * this->calc_eps());
-		tmp += sqrt(rhoU * rhoU + rhoV * rhoV);
-		return tmp;
+		return sqrt(gamma_g * (gamma_g - 1.0) * this->calc_eps()) + sqrt(u * u + v * v);
 	}
 
-
-	
-
+	void
+	init()
+	{
+		p = rho_g;
+		v = rhoU_g;
+		u = rhoV_g;
+		e = rhoE_g;
+	}
 };
 
 /*
@@ -73,8 +74,8 @@ public:
  */
 class field {
 	state **data;
-	short unsigned int bx;
-	short unsigned int by;
+	size_t bx;
+	size_t by;
 	double hx;
 	double hy;
 	double ht;
