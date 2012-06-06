@@ -22,10 +22,10 @@ void init_state(state *st, double hx, double hy, double ht)
 	
 	for (i = 0; i < st->bx + 2; ++i)
 		for (j = 0; j < st->by + 2; ++j) {
-			st->rho[i][j]  = gl_rho;
-			st->rhoU[i][j] = gl_rhoU;
-			st->rhoV[i][j] = gl_rhoV;
-			st->rhoE[i][j] = gl_rhoE;
+			st->rho[i][j]  = rho_g;
+			st->rhoU[i][j] = rhoU_g;
+			st->rhoV[i][j] = rhoV_g;
+			st->rhoE[i][j] = rhoE_g;
 		}
 }
 
@@ -124,7 +124,7 @@ void evalQ(state *st, prev_layer *pl, int i, int j, int meth, double gamma, doub
 	double eps_center = (2 * E_center) / (u_center * u_center + v_center * v_center);
 	double p_center   = (gamma - 1.0) * pl->rho_old * eps_center;
 	
-	// top FIXME error rho[i][j+1] vs rhoU[i+1][j]
+	//center
 	double u_top      = st->rhoU[i+1][j] / st->rho[i+1][j];
 	double v_top      = st->rhoV[i+1][j] / st->rho[i+1][j];
 	double E_top      = st->rhoE[i+1][j] / st->rho[i+1][j];

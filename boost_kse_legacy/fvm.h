@@ -12,6 +12,8 @@
 
 void init_state(state*, double, double, double);
 void execute(state*, prev_layer*, double);
+void evalVar(state*, prev_layer*, int, int, int, double, double *, double *);
+void evalQ(state*, prev_layer*, int, int, int, double, double*, double*);
 
 extern double rho_g;
 extern double rhoU_g;

@@ -4,90 +4,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern double rho_g;
-extern double rhoU_g;
-extern double rhoV_g;
-extern double rhoE_g;
-extern double gamma_g;
-
-// eval shock wave in the node
-const double mul_g = ;
-
-
-struct state {
-	double p;  // rho
-	double u; // rhoU
-	double v; // rhoV
-	double e; // rhoE
-
-public:
-
-	const state
-	operator/ (double x) const
-	{
-	    state tmp = *this;
-	    
-	    tmp.rho  /= x;
-	    tmp.rhoU /= x;
-	    tmp.rhoV /= x;
-	    tmp.rhoE /= x;
-	    
-	    return tmp;
-	}
-
-	double
-	calc_eps() const
-	{
-		return (2 * rhoE) / (rhoU * rhoU + rhoV * rhoV);
-	}
-
-	static
-	const state
-	update_state(const state &st, const double &gamma)
-	{
-		state tmp = st;
-		tmp.rhoU /= st.rho;
-		tmp.rhoV /= st.rho;
-		tmp.rhoE /= st.rho;
-		tmp.rho = (gamma_g - 1.0) * st.rho * tmp.calc_eps();
-		return tmp;
-	}
-
-	double
-	calc_velocity() const
-	{
-		double tmp;
-		
-		tmp  = sqrt(gamma_g * (gamma_g - 1.0) * this->calc_eps());
-		tmp += sqrt(rhoU * rhoU + rhoV * rhoV);
-		return tmp;
-	}
-
-
-	
-
-};
-
 /*
- * field state of the flat gas dynamic system
+ * /ru/ состояние системы плоской газовой динамики
+ * /en/ state of the flat gas dynamic system
  */
-class field {
-	state **data;
+typedef struct {
+	double **rho;
+	double **rhoU;
+	double **rhoV;
+	double **rhoE;
 	short unsigned int bx;
 	short unsigned int by;
 	double hx;
 	double hy;
 	double ht;
-	
-public:
-
-	double *&
-	operator[](size_t i)
-	{
-		return data[i];
-	}
-
-};
+} state;
 
 
 /* /ru/
@@ -105,14 +36,20 @@ public:
  */
 
 typedef struct {
-	state old;
-	state prev_old;
-	state *prev_row;
+	double rho_old;
+	double rhoU_old;
+	double rhoV_old;
+	double rhoE_old;
+	double rho_prev_old;
+	double rhoU_prev_old;
+	double rhoV_prev_old;
+	double rhoE_prev_old;
+	double *rho_prev_row;
+	double *rhoU_prev_row;
+	double *rhoV_prev_row;
+	double *rhoE_prev_row;
 	unsigned short int by;
 } prev_layer;
-
-
-prev_layer
 
 typedef struct {
 	double *top_bound;
@@ -143,16 +80,15 @@ typedef struct {
 	double (*tracef)(double);
 } shock;
 
-field 	   *create_field(int, int);
-void   		clear_field(field*);
+state 	   *create_state(int, int);
+void   		clear_state(state*);
 
 prev_layer *create_prev_layer(int);
 void        init_prev_layer(prev_layer*);
 void        clear_prev_layer(prev_layer*);
 
 bound      *create_bound(int, int);
-void
-init_bound(bound*, double**);
+void     	init_bound(bound*, double**);
 void   		copy_bound(bound*, double**);
 void        clear_bound(bound*);
 
@@ -164,6 +100,10 @@ double 		left_boundary_condition(int, double, int);
 double 		right_boundary_condition(int, double, int);
 void 		show_result(int bx, int by, double**, const char*, const char*);
 
+extern double rho_g;
+extern double rhoU_g;
+extern double rhoV_g;
+extern double rhoE_g;
 
 double psqrt(double);
 double psin(double);
