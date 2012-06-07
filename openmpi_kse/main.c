@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
  	// FIXME
 
 	//Huhonio
-	shock_condition(st, sh, gamma, partx, party);
+//	shock_condition(st, sh, gamma, partx, party);
 	//***************************************
 //	MPI_Barrier(MPI_COMM_WORLD);
 //	exit(0);
